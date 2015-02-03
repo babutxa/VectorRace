@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Vector Race</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_alba">Hello alba!!</string>
+    <string name="edit_default_message">Enter a message</string>
+    <string name="button_send">Send</string>
+    <string name="title_activity_display_message">My Message</string>
+    <string name="action_search">Search</string>
+    <string name="action_help">Help</string>
+    <string name="start_new">New</string>
+    <string name="brush">Brush</string>
+    <string name="erase">Erase</string>
+    <string name="save">Save</string>
+    <string name="paint">Paint</string>
+    <string name="button_start">START</string>
+    <string name="button_skeleton">SKELETON</string>
+    <string name="signin_other_error">There was an issue with sign in. Please try again later.</string>
+
+    <!-- Skeleton -->
+    <string name="welcome_to_our_skeleton_app_">Welcome to our skeleton app!</string>
+    <string name="match_instructions">Type in a new word for the data in this game, then hit done.</string>
+    <string name="turn_counter">Turn counter</string>
+    <string name="done">Done</string>
+    <string name="leave">Leave</string>
+    <string name="cancel">Cancel</string>
+    <string name="finish">Finish</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="check_games">Check games</string>
+    <string name="start_match">Start Match</string>
+    <string name="quick_match">Quick match</string>
+
+    <string name="status_multiplayer_error_not_trusted_tester">Anyone you invite must be a trusted tester</string>
+    <string name="match_error_already_rematched">This rematch has already been started!</string>
+    <string name="network_error_operation_failed">Network error: Operation failed</string>
+    <string name="client_reconnect_required">Games client reconnect required</string>
+    <string name="internal_error">Internal error</string>
+    <string name="match_error_inactive_match">This match is inactive.</string>
+    <string name='match_error_locally_modified'>This match has locally-modified data. This operation cannot be performed until the match is sent to the server.</string>
+    <string name="unexpected_status">Unexpected status</string>
+
+    <!-- BaseGameUtils-->
+    <string name="sign_in_failed">Failed to sign in. Please check your network connection and try again.</string>
+    <string name="app_misconfigured">The application is incorrectly configured. Check that the package name and signing certificate match the client ID created in Developer Console. Also, if the application is not yet published, check that the account you are trying to sign in with is listed as a tester account. See logs for more information.</string>
+    <string name="license_failed">License check failed.</string>
+    <string name="unknown_error">Unknown error.</string>
+
+
+
+</resources>
