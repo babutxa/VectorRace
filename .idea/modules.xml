@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/vectorRace.iml" filepath="$PROJECT_DIR$/vectorRace.iml" />
+      <module fileurl="file://$PROJECT_DIR$/VectorRace.iml" filepath="$PROJECT_DIR$/VectorRace.iml" />
       <module fileurl="file://$PROJECT_DIR$/vectorRaceApp/vectorRaceApp.iml" filepath="$PROJECT_DIR$/vectorRaceApp/vectorRaceApp.iml" />
     </modules>
   </component>

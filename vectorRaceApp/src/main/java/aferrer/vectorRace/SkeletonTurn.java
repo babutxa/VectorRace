@@ -29,11 +29,15 @@ import android.util.Log;
  *
  */
 public class SkeletonTurn {
+
     public static final String TAG = "EBTurn";
     public String data = "";
     public int turnCounter;
+
+    //constructor
     public SkeletonTurn() {
     }
+
     // This is the byte array we will write out to the TBMP API.
     public byte[] persist() {
         JSONObject retVal = new JSONObject();
@@ -41,13 +45,14 @@ public class SkeletonTurn {
             retVal.put("data", data);
             retVal.put("turnCounter", turnCounter);
         } catch (JSONException e) {
-// TODO Auto-generated catch block
+            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         String st = retVal.toString();
         Log.d(TAG, "==== PERSISTING\n" + st);
         return st.getBytes(Charset.forName("UTF-8"));
     }
+
     // Creates a new instance of SkeletonTurn.
     static public SkeletonTurn unpersist(byte[] byteArray) {
         if (byteArray == null) {
@@ -72,7 +77,7 @@ public class SkeletonTurn {
                 retVal.turnCounter = obj.getInt("turnCounter");
             }
         } catch (JSONException e) {
-// TODO Auto-generated catch block
+            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         return retVal;

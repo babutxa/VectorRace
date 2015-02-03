@@ -78,24 +78,32 @@
             android:orientation="horizontal" >
             <Button
                 android:id="@+id/doneButton"
-                android:layout_width="170dp"
+                android:layout_width="0dp"
+                android:layout_weight=".50"
                 android:layout_height="wrap_content"
                 android:onClick="onDoneClicked"
-                android:padding="@dimen/activity_vertical_margin"
                 android:text="@string/done"
                 android:textAppearance="@style/HelpText.Heading"
                 tools:ignore="ButtonStyle" />
             <Button
                 android:id="@+id/cancelButton"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight=".50"
                 android:layout_height="wrap_content"
                 android:onClick="onCancelClicked"
                 android:text="@string/cancel"
                 android:textAppearance="@style/HelpText.Heading"
                 tools:ignore="ButtonStyle" />
+        </LinearLayout>
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal" >
             <Button
                 android:id="@+id/leaveButton"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight=".50"
                 android:layout_height="wrap_content"
                 android:onClick="onLeaveClicked"
                 android:text="@string/leave"
@@ -103,7 +111,8 @@
                 tools:ignore="ButtonStyle" />
             <Button
                 android:id="@+id/finishButton"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight=".50"
                 android:layout_height="wrap_content"
                 android:onClick="onFinishClicked"
                 android:text="@string/finish"
