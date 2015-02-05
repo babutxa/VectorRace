@@ -9,21 +9,21 @@ import android.util.Log;
  */
 public class Track {
 
-    public Bitmap mask;
+    //public Bitmap mask;
     public int start_pos_x;
     public int start_pos_y;
     public int pixelsPerSquare;
 
     //constructor
-    public Track(Bitmap track_mask){
+    public Track(){
 
         pixelsPerSquare = 12;
-        mask = track_mask;
+        //mask = track_mask;
         analyzeMask();
     }
 
     public void analyzeMask(){
-
+        /*
         Log.w("[MyFirstApp]", "in analyzeMask = (" + mask.getWidth() + "," + mask.getHeight() + ")");
         start_pos_x = 10;
         start_pos_y = 10;
@@ -51,10 +51,6 @@ public class Track {
                 }
             }
         }
+        */
     }
-
-    public int getState(int x, int y){
-        return mask.getPixel(x,y);
-    }
-
 }

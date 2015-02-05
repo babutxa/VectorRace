@@ -5,9 +5,12 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -73,8 +76,9 @@ public class SkeletonActivity extends Activity
     // This is the current match data after being unpersisted.
     // Do not retain references to match data once you have
     // taken an action on the match, such as takeTurn()
-    public SkeletonTurn mTurnData;
-
+    private GameState gameState;
+    private DrawingView drawView;
+    private ImageButton currPaint;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +98,15 @@ public class SkeletonActivity extends Activity
         findViewById(R.id.sign_in_button).setOnClickListener(this);
         mDataView = ((TextView) findViewById(R.id.data_view));
         mTurnTextView = ((TextView) findViewById(R.id.turn_counter_view));
+
+        // Setup drawingView
+        gameState = new GameState();
+        LinearLayout paintLayout = (LinearLayout)findViewById(R.id.paint_colors);
+        currPaint = (ImageButton)paintLayout.getChildAt(0);
+        currPaint.setImageDrawable(getResources().getDrawable(R.drawable.paint_pressed));
+        drawView = (DrawingView)findViewById(R.id.drawing);
+        drawView.drawGameState(gameState);
+
         Log.d("TAG", "onCreate(): Created");
     }
 
@@ -102,7 +115,6 @@ public class SkeletonActivity extends Activity
         super.onStart();
         Log.d(TAG, "onStart(): Connecting to Google APIs");
         mGoogleApiClient.connect();
-        Log.d(TAG, "onStart(): Connected");
     }
 
     @Override
@@ -250,18 +262,18 @@ public class SkeletonActivity extends Activity
         String nextParticipantId = getNextParticipantId();
 
         // Create the next turn
-        mTurnData.turnCounter += 1;
-        mTurnData.data = mDataView.getText().toString();
+        gameState.turnCounter += 1;
+        gameState.data = mDataView.getText().toString();
         showSpinner();
 
-        Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mMatch.getMatchId(), mTurnData.persist(), nextParticipantId)
+        Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mMatch.getMatchId(), gameState.persist(), nextParticipantId)
                 .setResultCallback(new ResultCallback<TurnBasedMultiplayer.UpdateMatchResult>() {
                     @Override
                     public void onResult(TurnBasedMultiplayer.UpdateMatchResult result) {
                         processResult(result);
                     }
                 });
-        mTurnData = null;
+        gameState = null;
     }
 
     // Sign-in, Sign out behavior
@@ -283,10 +295,13 @@ public class SkeletonActivity extends Activity
         findViewById(R.id.login_layout).setVisibility(View.GONE);
         if (isDoingTurn) {
             findViewById(R.id.matchup_layout).setVisibility(View.GONE);
+            findViewById(R.id.tracks_layout).setVisibility(View.GONE);
             findViewById(R.id.gameplay_layout).setVisibility(View.VISIBLE);
         } else {
             findViewById(R.id.matchup_layout).setVisibility(View.VISIBLE);
+            findViewById(R.id.tracks_layout).setVisibility(View.GONE);
             findViewById(R.id.gameplay_layout).setVisibility(View.GONE);
+            //onCheckGamesClicked(null);
         }
     }
 
@@ -294,8 +309,8 @@ public class SkeletonActivity extends Activity
     public void setGameplayUI() {
         isDoingTurn = true;
         setViewVisibility();
-        mDataView.setText(mTurnData.data);
-        mTurnTextView.setText("Turn " + mTurnData.turnCounter);
+        mDataView.setText(gameState.data);
+        mTurnTextView.setText("Turn " + gameState.turnCounter);
     }
 
     // Helpful dialogs
@@ -360,21 +375,17 @@ public class SkeletonActivity extends Activity
             } else {
                 BaseGameUtils.showActivityResultError(this, request, response, R.string.signin_other_error);
             }
-        } else if (request == RC_LOOK_AT_MATCHES) {
-            // Returning from the 'Select Match' dialog
-            if (response != Activity.RESULT_OK) {
-                // user canceled
-                return;
+        } else if (request == RC_LOOK_AT_MATCHES) {      // Returning from the 'Select Match' dialog
+            if (response != Activity.RESULT_OK) {        // user canceled
+               return;
             }
             TurnBasedMatch match = data.getParcelableExtra(Multiplayer.EXTRA_TURN_BASED_MATCH);
             if (match != null) {
                 updateMatch(match);
             }
             Log.d(TAG, "Match = " + match);
-        } else if (request == RC_SELECT_PLAYERS) {
-            // Returned from 'Select players to Invite' dialog
-            if (response != Activity.RESULT_OK) {
-                // user canceled
+        } else if (request == RC_SELECT_PLAYERS) {       // Returned from 'Select players to Invite' dialog
+            if (response != Activity.RESULT_OK) {        // user canceled
                 return;
             }
             // get the invitee list
@@ -387,10 +398,10 @@ public class SkeletonActivity extends Activity
             if (minAutoMatchPlayers > 0) {
                 autoMatchCriteria = RoomConfig.createAutoMatchCriteria(minAutoMatchPlayers, maxAutoMatchPlayers, 0);
             }
-
             TurnBasedMatchConfig tbmc = TurnBasedMatchConfig.builder()
                     .addInvitedPlayers(invitees)
                     .setAutoMatchCriteria(autoMatchCriteria).build();
+
             // Start the match
             Games.TurnBasedMultiplayer.createMatch(mGoogleApiClient, tbmc).setResultCallback(
                     new ResultCallback<TurnBasedMultiplayer.InitiateMatchResult>() {
@@ -409,14 +420,14 @@ public class SkeletonActivity extends Activity
     // game, saving our initial state. Calling takeTurn() will
     // callback to OnTurnBasedMatchUpdated(), which will show the game UI.
     public void startMatch(TurnBasedMatch match) {
-        mTurnData = new SkeletonTurn();
-        mTurnData.data = "First turn"; // Some basic turn data
+        gameState = new GameState();
+        gameState.data = "First turn"; // Some basic turn data
         mMatch = match;
         String playerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
         String myParticipantId = mMatch.getParticipantId(playerId);
         showSpinner();
         Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, match.getMatchId(),
-                mTurnData.persist(), myParticipantId).setResultCallback(
+                gameState.persist(), myParticipantId).setResultCallback(
                 new ResultCallback<TurnBasedMultiplayer.UpdateMatchResult>() {
                     @Override
                     public void onResult(TurnBasedMultiplayer.UpdateMatchResult result) {
@@ -503,7 +514,7 @@ public class SkeletonActivity extends Activity
         // OK, it's active. Check on turn status.
         switch (turnStatus) {
             case TurnBasedMatch.MATCH_TURN_STATUS_MY_TURN:
-                mTurnData = SkeletonTurn.unpersist(mMatch.getData());
+                gameState = GameState.unpersist(mMatch.getData());
                 setGameplayUI();
                 return;
             case TurnBasedMatch.MATCH_TURN_STATUS_THEIR_TURN:
@@ -514,7 +525,7 @@ public class SkeletonActivity extends Activity
                 showWarning("Good inititative!",
                         "Still waiting for invitations.\n\nBe patient!");
         }
-        mTurnData = null;
+        gameState = null;
         setViewVisibility();
     }
 
@@ -524,8 +535,7 @@ public class SkeletonActivity extends Activity
             return;
         }
         isDoingTurn = false;
-        showWarning("Match",
-                "This match is canceled. All other players will have their game ended.");
+        showWarning("Match", "This match is canceled. All other players will have their game ended.");
     }
 
     private void processResult(TurnBasedMultiplayer.InitiateMatchResult result) {
@@ -639,8 +649,7 @@ public class SkeletonActivity extends Activity
                 break;
             default:
                 showErrorMessage(match, statusCode, R.string.unexpected_status);
-                Log.d(TAG, "Did not have warning or string to deal with: "
-                        + statusCode);
+                Log.d(TAG, "Did not have warning or string to deal with: " + statusCode);
         }
         return false;
     }
@@ -670,4 +679,53 @@ public class SkeletonActivity extends Activity
                 break;
         }
     }
+
+
+    public void paintClicked(View view){
+
+        String color = view.getTag().toString();
+
+        //use chosen color
+        if(view!=currPaint){
+            //update color
+            ImageButton imgView = (ImageButton)view;
+            drawView.setColor(color);
+            imgView.setImageDrawable(getResources().getDrawable(R.drawable.paint_pressed));
+            currPaint.setImageDrawable(getResources().getDrawable(R.drawable.paint));
+            currPaint=(ImageButton)view;
+        }
+
+        switch(color){
+            case "#FF660000":
+                gameState.updateState(-1, -1);
+                break;
+            case "#FFFF0000":
+                gameState.updateState(0, -1);
+                break;
+            case "#FFFF6600":
+                gameState.updateState(1, -1);
+                break;
+            case "#FFFFCC00":
+                gameState.updateState(-1, 0);
+                break;
+            case "#FF009900":
+                gameState.updateState(0, 0);
+                break;
+            case "#FF009999":
+                gameState.updateState(1, 0);
+                break;
+            case "#FF0000FF":
+                gameState.updateState(-1, 1);
+                break;
+            case "#FF990099":
+                gameState.updateState(0, 1);
+                break;
+            case "#FFFF6666":
+                gameState.updateState(1, 1);
+                break;
+        }
+
+        drawView.drawGameState(gameState); //internally this function render
+    }
 }
+

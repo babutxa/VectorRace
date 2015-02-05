@@ -20,5 +20,8 @@
     <dimen name="margin_large">32dp</dimen>
     <dimen name="margin_huge">64dp</dimen>
 
+    <!-- Image dimentions -->
+    <dimen name="small_track_width">300dp</dimen>
+    <dimen name="small_track_height">200dp</dimen>
 
 </resources>

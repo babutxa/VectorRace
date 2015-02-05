@@ -24,7 +24,7 @@ public class DrawingView extends ImageView {
     //canvas
     private Canvas drawCanvas;
     //gameState
-    private GameState gameState;
+    //private GameState gameState;
     //canvas bitmap
     private Bitmap canvasBitmap;
 
@@ -55,23 +55,19 @@ public class DrawingView extends ImageView {
     protected void onSizeChanged(int w, int h, int old_w, int old_h) {
         //view given size
         super.onSizeChanged(w, h, old_w, old_h);
-        drawGameState();
+        canvasBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        drawCanvas = new Canvas(canvasBitmap);
     }
 
-    private void drawGameState(){
-        //qixo no hauria d'estar aqui!!!
-        canvasBitmap = Bitmap.createBitmap(gameState.track.mask.getWidth(), gameState.track.mask.getHeight(), Bitmap.Config.ARGB_8888);
+    public void drawGameState(GameState gameState){
+        //aixo no hauria d'estar aqui!!!
+        canvasBitmap = Bitmap.createBitmap(1000, 1000, Bitmap.Config.ARGB_8888);
         drawCanvas = new Canvas(canvasBitmap);
 
         drawCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
         drawTrack(gameState.track);
         drawGrid();
         drawCar(gameState.car);
-    }
-
-    public void updateGameState(GameState newGameState){
-        gameState = newGameState;
-        drawGameState();
     }
 
     @Override
@@ -115,8 +111,8 @@ public class DrawingView extends ImageView {
     }
 
     private void drawTrack(Track track){
-        invalidate();
-        drawCanvas.drawBitmap(track.mask, 0, 0, drawPaint);
+        //invalidate();
+        //drawCanvas.drawBitmap(track.mask, 0, 0, drawPaint);
     }
     private void drawGrid(){
         invalidate();
