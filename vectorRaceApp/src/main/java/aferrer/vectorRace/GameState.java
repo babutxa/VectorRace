@@ -1,9 +1,8 @@
 package aferrer.vectorRace;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -15,32 +14,35 @@ import java.nio.charset.Charset;
  */
 public class GameState {
 
-    public static final String TAG = "EBTurn";
+    private static final String TAG = "EBTurn";
+    public static final int numOfCars = 4;
 
     public int turnCounter;
-    public String data = "";
-    public Track track;
-    public Car car;
+    public String mTrackId;
+    public Car[]  mCars;
 
     public GameState(){
-        track = new Track();
-        car = new Car();
-
-        //posem el cotxe a la sortida
-        car.initAtPos(track.start_pos_x, track.start_pos_y);
+        mCars = new Car[numOfCars];
+        for(int i=0; i<numOfCars; i++){
+            mCars[i] = new Car();
+        }
     }
 
-    public void updateState(int ax, int ay){
+    public void updateState(int carIdx, int ax, int ay){
         //aqui haurem de gestionar si el cotxe ha sortit de la carretera
-        car.move(ax,ay);
+        mCars[carIdx].moveTo(ax, ay);
+    }
+
+    public void undoState(int carIdx){
+        mCars[carIdx].undo();
     }
 
     // This is the byte array we will write out to the TBMP API.
     public byte[] persist() {
         JSONObject retVal = new JSONObject();
         try {
-            retVal.put("data", data);
             retVal.put("turnCounter", turnCounter);
+            retVal.put("trackId", mTrackId);
         } catch (JSONException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -67,11 +69,11 @@ public class GameState {
         GameState retVal = new GameState();
         try {
             JSONObject obj = new JSONObject(st);
-            if (obj.has("data")) {
-                retVal.data = obj.getString("data");
-            }
             if (obj.has("turnCounter")) {
                 retVal.turnCounter = obj.getInt("turnCounter");
+            }
+            if(obj.has("trackId")){
+                retVal.mTrackId = obj.getString("trackId");
             }
         } catch (JSONException e) {
             // TODO Auto-generated catch block

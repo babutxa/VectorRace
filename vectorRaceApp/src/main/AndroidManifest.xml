@@ -20,7 +20,8 @@
         android:icon="@drawable/icon"
         android:label="@string/app_name"
         android:screenOrientation="portrait"
-        android:theme="@style/Theme.App" >
+        android:theme="@style/Theme.App"
+        android:debuggable="true">
 
         <meta-data
             android:name="com.google.android.gms.games.APP_ID"

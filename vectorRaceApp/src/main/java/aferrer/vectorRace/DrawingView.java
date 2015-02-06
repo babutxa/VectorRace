@@ -2,6 +2,7 @@ package aferrer.vectorRace;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -23,8 +24,6 @@ public class DrawingView extends ImageView {
     private int paintColor = 0xFF660000;
     //canvas
     private Canvas drawCanvas;
-    //gameState
-    //private GameState gameState;
     //canvas bitmap
     private Bitmap canvasBitmap;
 
@@ -65,9 +64,11 @@ public class DrawingView extends ImageView {
         drawCanvas = new Canvas(canvasBitmap);
 
         drawCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-        drawTrack(gameState.track);
+        drawTrack(gameState.mTrackId);
         drawGrid();
-        drawCar(gameState.car);
+        for(int i=0; i<gameState.numOfCars; i++) {
+            drawCar(gameState.mCars[i]);
+        }
     }
 
     @Override
@@ -110,9 +111,33 @@ public class DrawingView extends ImageView {
         drawPaint.setColor(paintColor);
     }
 
-    private void drawTrack(Track track){
-        //invalidate();
-        //drawCanvas.drawBitmap(track.mask, 0, 0, drawPaint);
+    private void drawTrack(String trackId){
+        /*
+        invalidate();
+        Bitmap bm = null;
+        switch(trackId){
+            case "track1":
+                bm = BitmapFactory.decodeResource(getResources(), R.drawable.track1);
+                break;
+            case "track2":
+                bm = BitmapFactory.decodeResource(getResources(), R.drawable.track2);
+                break;
+            case "track3":
+                bm = BitmapFactory.decodeResource(getResources(), R.drawable.track3);
+                break;
+            case "track4":
+                bm = BitmapFactory.decodeResource(getResources(), R.drawable.track4);
+                break;
+            case "track5":
+                bm = BitmapFactory.decodeResource(getResources(), R.drawable.track5);
+                break;
+            case "track6":
+                bm = BitmapFactory.decodeResource(getResources(), R.drawable.track6);
+                break;
+        }
+
+        drawCanvas.drawBitmap(bm, 0, 0, drawPaint);
+        */
     }
     private void drawGrid(){
         invalidate();
@@ -136,11 +161,11 @@ public class DrawingView extends ImageView {
         drawCanvas.drawPath(drawPath, drawPaint);
         drawPath.reset();
 
-        //current car pos
+        //current mCar pos
         int currIdx = car.getCurrPosIdx();
         drawCanvas.drawCircle(car.x.get(currIdx)*zoom, car.y.get(currIdx)*zoom, 8, drawPaint);
 
-        //future car pos
+        //future mCar pos
         drawPaint.setStrokeWidth(1);
         int nextx = car.x.get(currIdx) + car.vx.get(currIdx);
         int nexty = car.y.get(currIdx) + car.vy.get(currIdx);
@@ -157,6 +182,4 @@ public class DrawingView extends ImageView {
         drawCanvas.drawCircle((nextx + 1) * zoom,  nexty * zoom, 5, drawPaint);
         drawCanvas.drawCircle((nextx + 1) * zoom, (nexty + 1) * zoom, 5, drawPaint);
     }
-
-
 }

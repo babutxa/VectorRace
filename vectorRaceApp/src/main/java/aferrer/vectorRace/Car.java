@@ -31,10 +31,6 @@ public class Car {
         color="#ffff0000";
     }
 
-    public void initAtPos(int xx, int yy){
-        x.set(0, xx);
-        y.set(0, yy);
-    }
     public int getNumOfMovements(){
         return x.size();
     }
@@ -43,15 +39,20 @@ public class Car {
         return(x.size() - 1);
     }
 
-    public int getPrevPosIdx(){
-        return (x.size() - 2);
-    }
-
-    public void move(int ax, int ay){
+    public void moveTo(int ax, int ay){
         int size = x.size();
         vx.add(vx.get(size - 1) + ax);
         vy.add(vy.get(size - 1) + ay);
         x.add(x.get(size - 1) + vx.get(size));
         y.add(y.get(size - 1) + vy.get(size));
+    }
+
+    //this function removes the las move
+    public void undo(){
+        int currPos = getCurrPosIdx();
+        x.remove(currPos);
+        y.remove(currPos);
+        vx.remove(currPos);
+        vy.remove(currPos);
     }
 }

@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -61,7 +60,6 @@ public class SkeletonActivity extends Activity
     private TurnBasedMatch mTurnBasedMatch;              // Current turn-based match
 
     // Local convenience pointers
-    public TextView mDataView;
     public TextView mTurnTextView;
     private AlertDialog mAlertDialog;
 
@@ -76,9 +74,9 @@ public class SkeletonActivity extends Activity
     // This is the current match data after being unpersisted.
     // Do not retain references to match data once you have
     // taken an action on the match, such as takeTurn()
-    private GameState gameState;
-    private DrawingView drawView;
-    private ImageButton currPaint;
+    private GameState mGameState;
+    private int mPreviousClicked;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,16 +94,10 @@ public class SkeletonActivity extends Activity
         // Setup signin and signout buttons
         findViewById(R.id.sign_out_button).setOnClickListener(this);
         findViewById(R.id.sign_in_button).setOnClickListener(this);
-        mDataView = ((TextView) findViewById(R.id.data_view));
         mTurnTextView = ((TextView) findViewById(R.id.turn_counter_view));
 
-        // Setup drawingView
-        gameState = new GameState();
-        LinearLayout paintLayout = (LinearLayout)findViewById(R.id.paint_colors);
-        currPaint = (ImageButton)paintLayout.getChildAt(0);
-        currPaint.setImageDrawable(getResources().getDrawable(R.drawable.paint_pressed));
-        drawView = (DrawingView)findViewById(R.id.drawing);
-        drawView.drawGameState(gameState);
+        //init gameState
+        mPreviousClicked = 0;
 
         Log.d("TAG", "onCreate(): Created");
     }
@@ -189,9 +181,22 @@ public class SkeletonActivity extends Activity
         startActivityForResult(intent, RC_LOOK_AT_MATCHES);
     }
 
+    //Shows the tracks_layout
+    public void onShowTracksClicked(View view) {
+        findViewById(R.id.login_layout).setVisibility(View.GONE);
+        findViewById(R.id.sign_in_button).setVisibility(View.GONE);
+        findViewById(R.id.matchup_layout).setVisibility(View.GONE);
+        findViewById(R.id.gameplay_layout).setVisibility(View.GONE);
+        findViewById(R.id.tracks_layout).setVisibility(View.VISIBLE);
+    }
+
     // Open the create-game UI. You will get back an onActivityResult
     // and figure out what to do.
     public void onStartMatchClicked(View view) {
+        //note selected track
+        mGameState.mTrackId = view.getTag().toString();
+
+        //open list of opponensts
         Intent intent = Games.TurnBasedMultiplayer.getSelectOpponentsIntent(mGoogleApiClient, 1, 7, true);
         startActivityForResult(intent, RC_SELECT_PLAYERS);
     }
@@ -257,23 +262,22 @@ public class SkeletonActivity extends Activity
     }
 
     // Upload your new gamestate, then take a turn, and pass it on to the next player.
-    public void onDoneClicked(View view) {
+    public void turnDone() {
         showSpinner();
         String nextParticipantId = getNextParticipantId();
 
         // Create the next turn
-        gameState.turnCounter += 1;
-        gameState.data = mDataView.getText().toString();
+        mGameState.turnCounter += 1;
         showSpinner();
 
-        Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mMatch.getMatchId(), gameState.persist(), nextParticipantId)
+        Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mMatch.getMatchId(), mGameState.persist(), nextParticipantId)
                 .setResultCallback(new ResultCallback<TurnBasedMultiplayer.UpdateMatchResult>() {
                     @Override
                     public void onResult(TurnBasedMultiplayer.UpdateMatchResult result) {
                         processResult(result);
                     }
                 });
-        gameState = null;
+        mGameState = null;
     }
 
     // Sign-in, Sign out behavior
@@ -301,7 +305,6 @@ public class SkeletonActivity extends Activity
             findViewById(R.id.matchup_layout).setVisibility(View.VISIBLE);
             findViewById(R.id.tracks_layout).setVisibility(View.GONE);
             findViewById(R.id.gameplay_layout).setVisibility(View.GONE);
-            //onCheckGamesClicked(null);
         }
     }
 
@@ -309,8 +312,11 @@ public class SkeletonActivity extends Activity
     public void setGameplayUI() {
         isDoingTurn = true;
         setViewVisibility();
-        mDataView.setText(gameState.data);
-        mTurnTextView.setText("Turn " + gameState.turnCounter);
+        mTurnTextView.setText("Turn " + mGameState.turnCounter);
+
+        //TODO alba: crec que falta pintar el gameState
+        DrawingView mDrawView = (DrawingView)findViewById(R.id.drawing);
+        mDrawView.drawGameState(mGameState);
     }
 
     // Helpful dialogs
@@ -420,14 +426,18 @@ public class SkeletonActivity extends Activity
     // game, saving our initial state. Calling takeTurn() will
     // callback to OnTurnBasedMatchUpdated(), which will show the game UI.
     public void startMatch(TurnBasedMatch match) {
-        gameState = new GameState();
-        gameState.data = "First turn"; // Some basic turn data
+
         mMatch = match;
+
         String playerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
         String myParticipantId = mMatch.getParticipantId(playerId);
+
+        mGameState = new GameState();
+        //TODO alba: associar els playersId amb els cars
+
         showSpinner();
         Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, match.getMatchId(),
-                gameState.persist(), myParticipantId).setResultCallback(
+                mGameState.persist(), myParticipantId).setResultCallback(
                 new ResultCallback<TurnBasedMultiplayer.UpdateMatchResult>() {
                     @Override
                     public void onResult(TurnBasedMultiplayer.UpdateMatchResult result) {
@@ -461,11 +471,13 @@ public class SkeletonActivity extends Activity
     public String getNextParticipantId() {
         String playerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
         String myParticipantId = mMatch.getParticipantId(playerId);
+
         ArrayList<String> participantIds = mMatch.getParticipantIds();
+
         int desiredIndex = -1;
         for (int i = 0; i < participantIds.size(); i++) {
             if (participantIds.get(i).equals(myParticipantId)) {
-                desiredIndex = i + 1;
+                desiredIndex = i;// + 1; TODO alba: desfer aixo quan es vulgui passar realment el torn
             }
         }
         if (desiredIndex < participantIds.size()) {
@@ -514,7 +526,7 @@ public class SkeletonActivity extends Activity
         // OK, it's active. Check on turn status.
         switch (turnStatus) {
             case TurnBasedMatch.MATCH_TURN_STATUS_MY_TURN:
-                gameState = GameState.unpersist(mMatch.getData());
+                mGameState = GameState.unpersist(mMatch.getData());
                 setGameplayUI();
                 return;
             case TurnBasedMatch.MATCH_TURN_STATUS_THEIR_TURN:
@@ -522,10 +534,9 @@ public class SkeletonActivity extends Activity
                 showWarning("Alas...", "It's not your turn.");
                 break;
             case TurnBasedMatch.MATCH_TURN_STATUS_INVITED:
-                showWarning("Good inititative!",
-                        "Still waiting for invitations.\n\nBe patient!");
+                showWarning("Good inititative!", "Still waiting for invitations.\n\nBe patient!");
         }
-        gameState = null;
+        mGameState = null;
         setViewVisibility();
     }
 
@@ -683,49 +694,64 @@ public class SkeletonActivity extends Activity
 
     public void paintClicked(View view){
 
-        String color = view.getTag().toString();
+        // selected button
+        int currentClicked = view.getId();
+        ImageButton currButton = (ImageButton)view;
+        currButton.setImageDrawable(getResources().getDrawable(R.drawable.paint_pressed));
 
-        //use chosen color
-        if(view!=currPaint){
-            //update color
-            ImageButton imgView = (ImageButton)view;
-            drawView.setColor(color);
-            imgView.setImageDrawable(getResources().getDrawable(R.drawable.paint_pressed));
-            currPaint.setImageDrawable(getResources().getDrawable(R.drawable.paint));
-            currPaint=(ImageButton)view;
+        // second check -> the current player has finished his turn
+        if(currentClicked == mPreviousClicked) {
+            ImageButton prevButton = (ImageButton)findViewById(mPreviousClicked);
+            prevButton.setImageDrawable(getResources().getDrawable(R.drawable.paint));
+            mPreviousClicked = 0;
+            turnDone();
+            return;
         }
 
-        switch(color){
-            case "#FF660000":
-                gameState.updateState(-1, -1);
+        //TODO alba: gestionar un cotxe per jugador. De moment tots juguen amb el mateix cotxe
+        int currentCar = 0;
+
+        // changing first check -> hem de borrar l'ultim state
+        if(mPreviousClicked != 0){
+            mGameState.undoState(currentCar);
+            ImageButton prevButton = (ImageButton)findViewById(mPreviousClicked);
+            prevButton.setImageDrawable(getResources().getDrawable(R.drawable.paint));
+        }
+
+        switch(currentClicked){
+            case R.id.button1:
+                mGameState.updateState(currentCar, -1, -1);
                 break;
-            case "#FFFF0000":
-                gameState.updateState(0, -1);
+            case R.id.button2:
+                mGameState.updateState(currentCar, 0, -1);
                 break;
-            case "#FFFF6600":
-                gameState.updateState(1, -1);
+            case R.id.button3:
+                mGameState.updateState(currentCar, 1, -1);
                 break;
-            case "#FFFFCC00":
-                gameState.updateState(-1, 0);
+            case R.id.button4:
+                mGameState.updateState(currentCar, -1, 0);
                 break;
-            case "#FF009900":
-                gameState.updateState(0, 0);
+            case R.id.button5:
+                mGameState.updateState(currentCar, 0, 0);
                 break;
-            case "#FF009999":
-                gameState.updateState(1, 0);
+            case R.id.button6:
+                mGameState.updateState(currentCar, 1, 0);
                 break;
-            case "#FF0000FF":
-                gameState.updateState(-1, 1);
+            case R.id.button7:
+                mGameState.updateState(currentCar, -1, 1);
                 break;
-            case "#FF990099":
-                gameState.updateState(0, 1);
+            case R.id.button8:
+                mGameState.updateState(currentCar, 0, 1);
                 break;
-            case "#FFFF6666":
-                gameState.updateState(1, 1);
+            case R.id.button9:
+                mGameState.updateState(currentCar, 1, 1);
                 break;
         }
 
-        drawView.drawGameState(gameState); //internally this function render
+        //turn finished
+        DrawingView mDrawView = (DrawingView)findViewById(R.id.drawing);
+        mDrawView.drawGameState(mGameState);
+        mPreviousClicked = currentClicked;
     }
 }
 
