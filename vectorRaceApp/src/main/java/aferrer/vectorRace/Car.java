@@ -1,6 +1,10 @@
 package aferrer.vectorRace;
 
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 
 /**
@@ -12,8 +16,6 @@ public class Car {
     public ArrayList<Integer> y;
     public ArrayList<Integer> vx;
     public ArrayList<Integer> vy;
-    public boolean inTrack;
-    public String color;
 
     public Car(){
 
@@ -26,9 +28,6 @@ public class Car {
         y.add(10);
         vx.add(0);
         vy.add(0);
-
-        inTrack=true;
-        color="#ffff0000";
     }
 
     public int getNumOfMovements(){
@@ -55,4 +54,53 @@ public class Car {
         vx.remove(currPos);
         vy.remove(currPos);
     }
+
+    public JSONObject toJSONObject() {
+
+        JSONArray jx = new JSONArray();
+        JSONArray jy = new JSONArray();
+        JSONArray jvx = new JSONArray();
+        JSONArray jvy = new JSONArray();
+
+        for(int i=0; i<x.size(); i++){
+            jx.put(x.get(i));
+            jy.put(y.get(i));
+            jvx.put(vx.get(i));
+            jvy.put(vy.get(i));
+        }
+
+        JSONObject jo = new JSONObject();
+        try {
+            jo.put("x", jx);
+            jo.put("y", jy);
+            jo.put("vx", jvx);
+            jo.put("vy", jvy);
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return jo;
+    }
+
+    public void fromJSONObject(JSONObject jo) throws JSONException {
+
+        x.clear();
+        y.clear();
+        vx.clear();
+        vy.clear();
+
+        JSONArray jx = (JSONArray) jo.get("x");
+        JSONArray jy = (JSONArray) jo.get("y");
+        JSONArray jvx = (JSONArray) jo.get("vx");
+        JSONArray jvy = (JSONArray) jo.get("vy");
+
+        for (int i = 0; i < jx.length(); i++) {
+            x.add(jx.optInt(i));
+            y.add(jy.optInt(i));
+            vx.add(jvx.optInt(i));
+            vy.add(jvy.optInt(i));
+        }
+    }
+
+
 }

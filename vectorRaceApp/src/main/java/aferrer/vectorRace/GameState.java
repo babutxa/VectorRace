@@ -43,6 +43,13 @@ public class GameState {
         try {
             retVal.put("turnCounter", turnCounter);
             retVal.put("trackId", mTrackId);
+            //list of cars
+            JSONArray jCars = new JSONArray();
+            for(int i = 0; i < mCars.length; i++) {
+                jCars.put(mCars[i].toJSONObject());
+            }
+            retVal.put("cars",jCars);
+
         } catch (JSONException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -74,6 +81,12 @@ public class GameState {
             }
             if(obj.has("trackId")){
                 retVal.mTrackId = obj.getString("trackId");
+            }
+            if(obj.has("cars")){
+                JSONArray jCars = obj.getJSONArray("cars");
+                for(int i = 0; i < jCars.length(); i++){
+                    retVal.mCars[i].fromJSONObject(jCars.getJSONObject(i));
+                }
             }
         } catch (JSONException e) {
             // TODO Auto-generated catch block

@@ -151,7 +151,7 @@ public class DrawingView extends ImageView {
 
     private void drawCar(Car car){
         invalidate();
-        setColor(car.color);
+        setColor("#ffff0000");
         drawPaint.setStrokeWidth(4);
 
         drawPath.moveTo(car.x.get(0) * zoom, car.y.get(0) * zoom);
