@@ -10,6 +10,7 @@ import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.ImageView;
 
@@ -58,7 +59,7 @@ public class DrawingView extends ImageView {
         drawCanvas = new Canvas(canvasBitmap);
     }
 
-    public void drawGameState(GameState gameState){
+    public void drawGameState(GameState gameState, String currParticipantId){
         //aixo no hauria d'estar aqui!!!
         canvasBitmap = Bitmap.createBitmap(1000, 1000, Bitmap.Config.ARGB_8888);
         drawCanvas = new Canvas(canvasBitmap);
@@ -66,8 +67,8 @@ public class DrawingView extends ImageView {
         drawCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
         drawTrack(gameState.mTrackId);
         drawGrid();
-        for(int i=0; i<gameState.numOfCars; i++) {
-            drawCar(gameState.mCars[i]);
+        for(int i=0; i<gameState.getNumOfCars(); i++) {
+            drawCar(gameState.getCar(i), currParticipantId);
         }
     }
 
@@ -149,9 +150,12 @@ public class DrawingView extends ImageView {
         }
     }
 
-    private void drawCar(Car car){
+    private void drawCar(Car car, String currParticipantId){
+
+        Log.d("*** DrawingView ", "drawCar(): -------------------------------------" + car.mParticipantId);
+
         invalidate();
-        setColor("#ffff0000");
+        setColor(car.mColor);
         drawPaint.setStrokeWidth(4);
 
         drawPath.moveTo(car.x.get(0) * zoom, car.y.get(0) * zoom);
@@ -163,23 +167,30 @@ public class DrawingView extends ImageView {
 
         //current mCar pos
         int currIdx = car.getCurrPosIdx();
+        int nextx = car.x.get(currIdx) + car.getVx();
+        int nexty = car.y.get(currIdx) + car.getVy();
+
+        //draw current Position
         drawCanvas.drawCircle(car.x.get(currIdx)*zoom, car.y.get(currIdx)*zoom, 8, drawPaint);
 
-        //future mCar pos
         drawPaint.setStrokeWidth(1);
-        int nextx = car.x.get(currIdx) + car.vx.get(currIdx);
-        int nexty = car.y.get(currIdx) + car.vy.get(currIdx);
+        if(car.hasFuturePos()) {
+            drawCanvas.drawCircle(car.getFutureX()*zoom, car.getFutureY()*zoom, 8, drawPaint);
+        }
 
-        drawCanvas.drawCircle((nextx - 1) * zoom, (nexty - 1) * zoom, 5, drawPaint);
-        drawCanvas.drawCircle((nextx - 1) * zoom,  nexty * zoom, 5, drawPaint);
-        drawCanvas.drawCircle((nextx - 1) * zoom, (nexty + 1) * zoom, 5, drawPaint);
+        //the current car shows the future options
+        if(car.mParticipantId.equals(currParticipantId)) {
+            drawCanvas.drawCircle((nextx - 1) * zoom, (nexty - 1) * zoom, 5, drawPaint);
+            drawCanvas.drawCircle((nextx - 1) * zoom, nexty * zoom, 5, drawPaint);
+            drawCanvas.drawCircle((nextx - 1) * zoom, (nexty + 1) * zoom, 5, drawPaint);
 
-        drawCanvas.drawCircle(nextx * zoom, (nexty - 1) * zoom, 5, drawPaint);
-        drawCanvas.drawCircle(nextx * zoom,  nexty * zoom, 5, drawPaint);
-        drawCanvas.drawCircle(nextx * zoom, (nexty + 1) * zoom, 5, drawPaint);
+            drawCanvas.drawCircle(nextx * zoom, (nexty - 1) * zoom, 5, drawPaint);
+            drawCanvas.drawCircle(nextx * zoom, nexty * zoom, 5, drawPaint);
+            drawCanvas.drawCircle(nextx * zoom, (nexty + 1) * zoom, 5, drawPaint);
 
-        drawCanvas.drawCircle((nextx + 1) * zoom, (nexty - 1) * zoom, 5, drawPaint);
-        drawCanvas.drawCircle((nextx + 1) * zoom,  nexty * zoom, 5, drawPaint);
-        drawCanvas.drawCircle((nextx + 1) * zoom, (nexty + 1) * zoom, 5, drawPaint);
+            drawCanvas.drawCircle((nextx + 1) * zoom, (nexty - 1) * zoom, 5, drawPaint);
+            drawCanvas.drawCircle((nextx + 1) * zoom, nexty * zoom, 5, drawPaint);
+            drawCanvas.drawCircle((nextx + 1) * zoom, (nexty + 1) * zoom, 5, drawPaint);
+        }
     }
 }

@@ -1,6 +1,8 @@
 package aferrer.vectorRace;
 
 
+import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -12,22 +14,74 @@ import java.util.ArrayList;
  */
 
 public class Car {
+    public String mParticipantId;
+    public String mColor;
     public ArrayList<Integer> x;
     public ArrayList<Integer> y;
-    public ArrayList<Integer> vx;
-    public ArrayList<Integer> vy;
 
-    public Car(){
+    //not included in JSONObject data
+    private Boolean mFutureValid;
+    private Integer mFutureX;
+    private Integer mFutureY;
+
+    public Car(String participantId, String color, int startX, int startY){
+
+        mParticipantId = participantId;
+        mColor = color;
+        mFutureValid = false;
 
         x = new ArrayList<Integer>();
         y = new ArrayList<Integer>();
-        vx = new ArrayList<Integer>();
-        vy = new ArrayList<Integer>();
+        x.add(startX);
+        y.add(startY);
+    }
 
-        x.add(10);
-        y.add(10);
-        vx.add(0);
-        vy.add(0);
+    public Car(JSONObject jo) throws JSONException {
+
+        mParticipantId = jo.getString("id");
+        mColor = jo.getString("color");
+        mFutureValid = false;
+
+        JSONArray jx = jo.getJSONArray("x");
+        JSONArray jy = jo.getJSONArray("y");
+
+        x = new ArrayList<Integer>();
+        y = new ArrayList<Integer>();
+        for (int i = 0; i < jx.length(); i++) {
+            x.add(jx.optInt(i));
+            y.add(jy.optInt(i));
+        }
+    }
+
+    public Integer getFutureX(){return mFutureX;}
+    public Integer getFutureY(){return mFutureY;}
+
+    public void addFuturePos(int ax, int ay){
+        Log.d("*** car ", "addFuturePos(): -------------------------------------" + mParticipantId);
+        int size = x.size();
+        int vx = getVx() + ax;
+        int vy = getVy() + ay;
+        mFutureX = x.get(size - 1) + vx;
+        mFutureY = y.get(size - 1) + vy;
+        mFutureValid = true;
+    }
+
+    public void move(){
+        if(mFutureValid) {
+            x.add(mFutureX);
+            y.add(mFutureY);
+        }
+        else {
+            Log.d("*** Car ", "move(): the future pos is not valid.");
+        }
+    }
+
+    public void resetFuturePos(){
+        mFutureValid = false;
+    }
+
+    public Boolean hasFuturePos(){
+        return mFutureValid;
     }
 
     public int getNumOfMovements(){
@@ -38,69 +92,43 @@ public class Car {
         return(x.size() - 1);
     }
 
-    public void moveTo(int ax, int ay){
+    public int getVx(){
         int size = x.size();
-        vx.add(vx.get(size - 1) + ax);
-        vy.add(vy.get(size - 1) + ay);
-        x.add(x.get(size - 1) + vx.get(size));
-        y.add(y.get(size - 1) + vy.get(size));
+        if(size > 2) {
+            return x.get(size - 1) - x.get(size - 2);
+        }
+        return 0;
+    }
+    public int getVy(){
+        int size = x.size();
+        if(size > 2) {
+            return y.get(size - 1) - y.get(size - 2);
+        }
+        return 0;
     }
 
-    //this function removes the las move
-    public void undo(){
-        int currPos = getCurrPosIdx();
-        x.remove(currPos);
-        y.remove(currPos);
-        vx.remove(currPos);
-        vy.remove(currPos);
-    }
+
 
     public JSONObject toJSONObject() {
 
         JSONArray jx = new JSONArray();
         JSONArray jy = new JSONArray();
-        JSONArray jvx = new JSONArray();
-        JSONArray jvy = new JSONArray();
 
         for(int i=0; i<x.size(); i++){
             jx.put(x.get(i));
             jy.put(y.get(i));
-            jvx.put(vx.get(i));
-            jvy.put(vy.get(i));
         }
 
         JSONObject jo = new JSONObject();
         try {
+            jo.put("id", mParticipantId);
+            jo.put("color", mColor);
             jo.put("x", jx);
             jo.put("y", jy);
-            jo.put("vx", jvx);
-            jo.put("vy", jvy);
         } catch (JSONException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
         return jo;
     }
-
-    public void fromJSONObject(JSONObject jo) throws JSONException {
-
-        x.clear();
-        y.clear();
-        vx.clear();
-        vy.clear();
-
-        JSONArray jx = (JSONArray) jo.get("x");
-        JSONArray jy = (JSONArray) jo.get("y");
-        JSONArray jvx = (JSONArray) jo.get("vx");
-        JSONArray jvy = (JSONArray) jo.get("vy");
-
-        for (int i = 0; i < jx.length(); i++) {
-            x.add(jx.optInt(i));
-            y.add(jy.optInt(i));
-            vx.add(jvx.optInt(i));
-            vy.add(jvy.optInt(i));
-        }
-    }
-
-
 }

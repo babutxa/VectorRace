@@ -1,9 +1,16 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        config {
+            keyAlias 'my_android_key'
+            keyPassword 'transeunte'
+            storeFile file('C:/Users/AFerrer/keystores/androidApps.jks')
+            storePassword 'transeunte'
+        }
+    }
     compileSdkVersion 21
     buildToolsVersion "21.1.2"
-
     defaultConfig {
         applicationId "aferrer.vectorRace"
         minSdkVersion 16
@@ -14,10 +21,13 @@ android {
     buildTypes {
         debug {
             debuggable true
+            renderscriptDebuggable true
+            signingConfig signingConfigs.config
         }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.config
         }
     }
 }

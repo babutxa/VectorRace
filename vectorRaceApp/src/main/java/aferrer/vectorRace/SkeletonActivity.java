@@ -76,6 +76,7 @@ public class SkeletonActivity extends Activity
     // taken an action on the match, such as takeTurn()
     private GameState mGameState;
     private int mPreviousClicked;
+    private String mSelectedTrack;
 
 
     @Override
@@ -194,7 +195,7 @@ public class SkeletonActivity extends Activity
     // and figure out what to do.
     public void onStartMatchClicked(View view) {
         //note selected track
-        mGameState.mTrackId = view.getTag().toString();
+        mSelectedTrack = view.getTag().toString();
 
         //open list of opponensts
         Intent intent = Games.TurnBasedMultiplayer.getSelectOpponentsIntent(mGoogleApiClient, 1, 7, true);
@@ -314,9 +315,12 @@ public class SkeletonActivity extends Activity
         setViewVisibility();
         mTurnTextView.setText("Turn " + mGameState.turnCounter);
 
-        //TODO alba: crec que falta pintar el gameState
+        //pintem el gameState
+        String playerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
+        String myParticipantId = mMatch.getParticipantId(playerId);
+
         DrawingView mDrawView = (DrawingView)findViewById(R.id.drawing);
-        mDrawView.drawGameState(mGameState);
+        mDrawView.drawGameState(mGameState, myParticipantId);
     }
 
     // Helpful dialogs
@@ -429,13 +433,18 @@ public class SkeletonActivity extends Activity
 
         mMatch = match;
 
+        // init game state
+        mGameState = new GameState();
+        mGameState.mTrackId = mSelectedTrack;
+        ArrayList<String> participantsIds = mMatch.getParticipantIds();
+        for(int i = 0; i < participantsIds.size(); i++){
+            mGameState.addCar(participantsIds.get(i));
+        }
+
         String playerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
         String myParticipantId = mMatch.getParticipantId(playerId);
-
-        mGameState = new GameState();
-        //TODO alba: associar els playersId amb els cars
-
         showSpinner();
+
         Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, match.getMatchId(),
                 mGameState.persist(), myParticipantId).setResultCallback(
                 new ResultCallback<TurnBasedMultiplayer.UpdateMatchResult>() {
@@ -444,6 +453,7 @@ public class SkeletonActivity extends Activity
                         processResult(result);
                     }
                 });
+
     }
 
     // If you choose to rematch, then call it and wait for a response.
@@ -699,58 +709,59 @@ public class SkeletonActivity extends Activity
         ImageButton currButton = (ImageButton)view;
         currButton.setImageDrawable(getResources().getDrawable(R.drawable.paint_pressed));
 
+        //un cotxe per jugador.
+        String playerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
+        String myParticipantId = mMatch.getParticipantId(playerId);
+
         // second check -> the current player has finished his turn
         if(currentClicked == mPreviousClicked) {
             ImageButton prevButton = (ImageButton)findViewById(mPreviousClicked);
             prevButton.setImageDrawable(getResources().getDrawable(R.drawable.paint));
+            mGameState.updateState(myParticipantId);
             mPreviousClicked = 0;
             turnDone();
             return;
         }
 
-        //TODO alba: gestionar un cotxe per jugador. De moment tots juguen amb el mateix cotxe
-        int currentCar = 0;
-
-        // changing first check -> hem de borrar l'ultim state
+        // changing first check
         if(mPreviousClicked != 0){
-            mGameState.undoState(currentCar);
             ImageButton prevButton = (ImageButton)findViewById(mPreviousClicked);
             prevButton.setImageDrawable(getResources().getDrawable(R.drawable.paint));
         }
 
         switch(currentClicked){
             case R.id.button1:
-                mGameState.updateState(currentCar, -1, -1);
+                mGameState.updateFutureState(myParticipantId, -1, -1);
                 break;
             case R.id.button2:
-                mGameState.updateState(currentCar, 0, -1);
+                mGameState.updateFutureState(myParticipantId, 0, -1);
                 break;
             case R.id.button3:
-                mGameState.updateState(currentCar, 1, -1);
+                mGameState.updateFutureState(myParticipantId, 1, -1);
                 break;
             case R.id.button4:
-                mGameState.updateState(currentCar, -1, 0);
+                mGameState.updateFutureState(myParticipantId, -1, 0);
                 break;
             case R.id.button5:
-                mGameState.updateState(currentCar, 0, 0);
+                mGameState.updateFutureState(myParticipantId, 0, 0);
                 break;
             case R.id.button6:
-                mGameState.updateState(currentCar, 1, 0);
+                mGameState.updateFutureState(myParticipantId, 1, 0);
                 break;
             case R.id.button7:
-                mGameState.updateState(currentCar, -1, 1);
+                mGameState.updateFutureState(myParticipantId, -1, 1);
                 break;
             case R.id.button8:
-                mGameState.updateState(currentCar, 0, 1);
+                mGameState.updateFutureState(myParticipantId, 0, 1);
                 break;
             case R.id.button9:
-                mGameState.updateState(currentCar, 1, 1);
+                mGameState.updateFutureState(myParticipantId, 1, 1);
                 break;
         }
 
         //turn finished
         DrawingView mDrawView = (DrawingView)findViewById(R.id.drawing);
-        mDrawView.drawGameState(mGameState);
+        mDrawView.drawGameState(mGameState, myParticipantId);
         mPreviousClicked = currentClicked;
     }
 }
