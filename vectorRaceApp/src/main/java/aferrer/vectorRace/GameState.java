@@ -21,6 +21,9 @@ public class GameState {
     public String mTrackId;
     private ArrayList<Car> mCars;
 
+    //not serialisable stuff
+    public String mCurrParticipantId;
+
     public GameState(){
         turnCounter = 0;
         mTrackId = "";
@@ -51,19 +54,19 @@ public class GameState {
         return "#ffffffff"; //default
     }
 
-    public void updateFutureState(String participantId, int ax, int ay){
-        Log.d("*** GameState ", "updateFutureState(): -------------------------------------" + participantId);
+    public void updateFutureState(int ax, int ay){
+        Log.d("*** GameState ", "updateFutureState(): -------------------------------------");
         for(int i = 0; i < mCars.size(); i++){
-            if(mCars.get(i).mParticipantId.equals(participantId)){
+            if(mCars.get(i).mParticipantId.equals(mCurrParticipantId)){
                 mCars.get(i).addFuturePos(ax, ay);
             }
         }
     }
 
-    public void updateState(String participantId){
-        Log.d("*** GameState ", "updateState(): -------------------------------------" + participantId);
+    public void updateState(){
+        Log.d("*** GameState ", "updateState(): -------------------------------------");
         for(int i = 0; i < mCars.size(); i++){
-            if(mCars.get(i).mParticipantId.equals(participantId)){
+            if(mCars.get(i).mParticipantId.equals(mCurrParticipantId)){
                 //TODO alba: aqui haurem de gestionar si el cotxe ha sortit de la carretera
                 mCars.get(i).move();
             }

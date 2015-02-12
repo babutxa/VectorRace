@@ -17,18 +17,23 @@ import android.widget.ImageView;
 
 public class DrawingView extends ImageView {
 
-    //drawing path
-    private Path drawPath;
-    //drawing and canvas paint
-    private Paint drawPaint, canvasPaint;
-    //initial color
-    private int paintColor = 0xFF660000;
-    //canvas
-    private Canvas drawCanvas;
-    //canvas bitmap
+    private Paint paint;
     private Bitmap canvasBitmap;
-
     private int zoom = 30;
+
+    //gameState
+    GameState mGameState;
+
+    //scroll stuff
+    private float mCurrentX = 0;
+    private float mCurrentY = 0;
+    private float mTotalX = 0;
+    private float mTotalY = 0;
+    private float mDeltaX = 0;
+    private float mDeltaY = 0;
+    private int mPadding;
+    private final int DEFAULT_PADDING = 10;
+
 
     public DrawingView(Context context, AttributeSet attrs){
         super(context, attrs);
@@ -36,92 +41,111 @@ public class DrawingView extends ImageView {
     }
 
     private void setupDrawing(){
+        mPadding = DEFAULT_PADDING;
+
+        setScaleType(ScaleType.MATRIX);
+
         //get drawing area setup for interaction
-        drawPath = new Path();
-        drawPaint = new Paint();
+        paint = new Paint();
+        paint.setAntiAlias(true);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeJoin(Paint.Join.ROUND);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        //canvasPaint = new Paint(Paint.DITHER_FLAG);
 
-        drawPaint.setColor(paintColor);
-
-        drawPaint.setAntiAlias(true);
-        drawPaint.setStrokeWidth(5);
-        drawPaint.setStyle(Paint.Style.STROKE);
-        drawPaint.setStrokeJoin(Paint.Join.ROUND);
-        drawPaint.setStrokeCap(Paint.Cap.ROUND);
-
-        canvasPaint = new Paint(Paint.DITHER_FLAG);
-    }
+        mGameState = null;
+     }
 
     @Override
     protected void onSizeChanged(int w, int h, int old_w, int old_h) {
         //view given size
         super.onSizeChanged(w, h, old_w, old_h);
         canvasBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        drawCanvas = new Canvas(canvasBitmap);
-    }
-
-    public void drawGameState(GameState gameState, String currParticipantId){
-        //aixo no hauria d'estar aqui!!!
-        canvasBitmap = Bitmap.createBitmap(1000, 1000, Bitmap.Config.ARGB_8888);
-        drawCanvas = new Canvas(canvasBitmap);
-
-        drawCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-        drawTrack(gameState.mTrackId);
-        drawGrid();
-        for(int i=0; i<gameState.getNumOfCars(); i++) {
-            drawCar(gameState.getCar(i), currParticipantId);
-        }
     }
 
     @Override
-    protected void onDraw(@NonNull Canvas canvas) {
-        //draw view
-        canvas.drawBitmap(canvasBitmap, 0, 0, canvasPaint);
-        canvas.drawPath(drawPath, drawPaint);
-        //drawGameState();
+    protected void onDraw(Canvas canvas) {
+        Log.d("*** DrawingView ", "onDraw(): -------------------------------------");
+        if (canvasBitmap == null) {
+            return;
+        }
+        if(mGameState != null) {
+            drawGameState(canvas);
+        }
     }
 
     @Override
     public boolean onTouchEvent(@NonNull MotionEvent event) {
-        //detect user touch
-        float touchX = event.getX();
-        float touchY = event.getY();
 
-        switch (event.getAction()) {
+        //detect userTouch
+        switch(event.getAction()){
             case MotionEvent.ACTION_DOWN:
-                drawPath.moveTo(touchX, touchY);
+                mCurrentX = event.getRawX();
+                mCurrentY = event.getRawY();
                 break;
             case MotionEvent.ACTION_MOVE:
-                drawPath.lineTo(touchX, touchY);
-                break;
-            case MotionEvent.ACTION_UP:
-                drawCanvas.drawPath(drawPath, drawPaint);
-                drawPath.reset();
-                break;
-            default:
-                return false;
-        }
+                float x = event.getRawX();
+                float y = event.getRawY();
 
-        invalidate();
+                // Update how much the touch moved
+                mDeltaX = x - mCurrentX;
+                mDeltaY = y - mCurrentY;
+
+                mCurrentX = x;
+                mCurrentY = y;
+
+                invalidate();
+                break;
+         }
+        // Consume event
         return true;
     }
 
-    public void setColor(String newColor){
-        //set color
-        invalidate();
-        paintColor = Color.parseColor(newColor);
-        drawPaint.setColor(paintColor);
+    // this function updates the values of mTotalX and mTotalY necessary for scrolling.
+    private void updateScroll(){
+        //float newTotalX = mTotalX + mDeltaX;
+        // Don't scroll off the left or right edges of the bitmap.
+        //if (mPadding > newTotalX && newTotalX > getMeasuredWidth() - canvasBitmap.getWidth() - mPadding)
+            mTotalX += mDeltaX;
+
+        //float newTotalY = mTotalY + mDeltaY;
+        // Don't scroll off the top or bottom edges of the bitmap.
+        //if (mPadding > newTotalY && newTotalY > getMeasuredHeight() - canvasBitmap.getHeight() - mPadding)
+            mTotalY += mDeltaY;
     }
 
-    private void drawTrack(String trackId){
-        /*
+    public void updateGameState(GameState gameState){
+        mGameState = gameState;
         invalidate();
+    }
+
+    private void drawGameState(Canvas canvas){
+        Log.d("*** DrawingView ", "drawGameState(): -------------------------------------");
+        //clear all
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+
+        //scroll
+        updateScroll();
+        canvas.translate(mTotalX, mTotalY);
+
+        //redraw state
+        drawTrack(canvas);
+        drawGrid(canvas);
+        drawCars(canvas);
+    }
+
+    private void setColor(String newColor){
+        paint.setColor(Color.parseColor(newColor));
+    }
+
+    private Bitmap getTrackBitmap(String trackId){
         Bitmap bm = null;
         switch(trackId){
             case "track1":
                 bm = BitmapFactory.decodeResource(getResources(), R.drawable.track1);
                 break;
             case "track2":
-                bm = BitmapFactory.decodeResource(getResources(), R.drawable.track2);
+                bm = BitmapFactory.decodeResource(getResources(), R.drawable.track);
                 break;
             case "track3":
                 bm = BitmapFactory.decodeResource(getResources(), R.drawable.track3);
@@ -136,61 +160,66 @@ public class DrawingView extends ImageView {
                 bm = BitmapFactory.decodeResource(getResources(), R.drawable.track6);
                 break;
         }
-
-        drawCanvas.drawBitmap(bm, 0, 0, drawPaint);
-        */
+        return bm;
     }
-    private void drawGrid(){
-        invalidate();
+
+    private void drawTrack(Canvas canvas){
+        Bitmap trackBitmap = getTrackBitmap(mGameState.mTrackId);
+        canvas.drawBitmap(trackBitmap, 0, 0, paint);
+    }
+
+    private void drawGrid(Canvas canvas){
         setColor("#22000000");
-        drawPaint.setStrokeWidth(1);
+        paint.setStrokeWidth(1);
         for(int i=0; i<200; i++) {
-            drawCanvas.drawLine(i*zoom, 0, i*zoom, 1400, drawPaint);
-            drawCanvas.drawLine(0, i*zoom, 1400, i*zoom, drawPaint);
+            canvas.drawLine(i*zoom, 0, i*zoom, 1400, paint);
+            canvas.drawLine(0, i*zoom, 1400, i*zoom, paint);
         }
     }
 
-    private void drawCar(Car car, String currParticipantId){
+    private void drawCars(Canvas canvas){
+        for(int carIdx = 0; carIdx < mGameState.getNumOfCars(); carIdx++) {
+            Car car = mGameState.getCar(carIdx);
 
-        Log.d("*** DrawingView ", "drawCar(): -------------------------------------" + car.mParticipantId);
+            setColor(car.mColor);
+            paint.setStrokeWidth(4);
 
-        invalidate();
-        setColor(car.mColor);
-        drawPaint.setStrokeWidth(4);
+            //draw Path
+            Path drawPath = new Path();
+            drawPath.moveTo(car.x.get(0) * zoom, car.y.get(0) * zoom);
+            for(int i=1; i<car.getNumOfMovements(); i++){
+                drawPath.lineTo(car.x.get(i) * zoom, car.y.get(i) * zoom);
+            }
+            canvas.drawPath(drawPath, paint);
 
-        drawPath.moveTo(car.x.get(0) * zoom, car.y.get(0) * zoom);
-        for(int i=1; i<car.getNumOfMovements(); i++){
-            drawPath.lineTo(car.x.get(i) * zoom, car.y.get(i) * zoom);
-        }
-        drawCanvas.drawPath(drawPath, drawPaint);
-        drawPath.reset();
+            //current mCar pos
+            int currIdx = car.getCurrPosIdx();
+            int nextx = car.x.get(currIdx) + car.getVx();
+            int nexty = car.y.get(currIdx) + car.getVy();
 
-        //current mCar pos
-        int currIdx = car.getCurrPosIdx();
-        int nextx = car.x.get(currIdx) + car.getVx();
-        int nexty = car.y.get(currIdx) + car.getVy();
+            //draw current Position
+            canvas.drawCircle(car.x.get(currIdx)*zoom, car.y.get(currIdx)*zoom, 8, paint);
 
-        //draw current Position
-        drawCanvas.drawCircle(car.x.get(currIdx)*zoom, car.y.get(currIdx)*zoom, 8, drawPaint);
+            //draw future Position
+            paint.setStrokeWidth(1);
+            if(car.hasFuturePos()) {
+                canvas.drawCircle(car.getFutureX()*zoom, car.getFutureY()*zoom, 8, paint);
+            }
 
-        drawPaint.setStrokeWidth(1);
-        if(car.hasFuturePos()) {
-            drawCanvas.drawCircle(car.getFutureX()*zoom, car.getFutureY()*zoom, 8, drawPaint);
-        }
+            //the current car shows the future options
+            if(car.mParticipantId.equals(mGameState.mCurrParticipantId)) {
+                canvas.drawCircle((nextx - 1) * zoom, (nexty - 1) * zoom, 5, paint);
+                canvas.drawCircle((nextx - 1) * zoom, nexty * zoom, 5, paint);
+                canvas.drawCircle((nextx - 1) * zoom, (nexty + 1) * zoom, 5, paint);
 
-        //the current car shows the future options
-        if(car.mParticipantId.equals(currParticipantId)) {
-            drawCanvas.drawCircle((nextx - 1) * zoom, (nexty - 1) * zoom, 5, drawPaint);
-            drawCanvas.drawCircle((nextx - 1) * zoom, nexty * zoom, 5, drawPaint);
-            drawCanvas.drawCircle((nextx - 1) * zoom, (nexty + 1) * zoom, 5, drawPaint);
+                canvas.drawCircle(nextx * zoom, (nexty - 1) * zoom, 5, paint);
+                canvas.drawCircle(nextx * zoom, nexty * zoom, 5, paint);
+                canvas.drawCircle(nextx * zoom, (nexty + 1) * zoom, 5, paint);
 
-            drawCanvas.drawCircle(nextx * zoom, (nexty - 1) * zoom, 5, drawPaint);
-            drawCanvas.drawCircle(nextx * zoom, nexty * zoom, 5, drawPaint);
-            drawCanvas.drawCircle(nextx * zoom, (nexty + 1) * zoom, 5, drawPaint);
-
-            drawCanvas.drawCircle((nextx + 1) * zoom, (nexty - 1) * zoom, 5, drawPaint);
-            drawCanvas.drawCircle((nextx + 1) * zoom, nexty * zoom, 5, drawPaint);
-            drawCanvas.drawCircle((nextx + 1) * zoom, (nexty + 1) * zoom, 5, drawPaint);
+                canvas.drawCircle((nextx + 1) * zoom, (nexty - 1) * zoom, 5, paint);
+                canvas.drawCircle((nextx + 1) * zoom, nexty * zoom, 5, paint);
+                canvas.drawCircle((nextx + 1) * zoom, (nexty + 1) * zoom, 5, paint);
+            }
         }
     }
 }

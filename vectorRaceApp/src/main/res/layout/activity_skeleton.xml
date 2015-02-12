@@ -222,7 +222,7 @@
             android:text="@string/turn_counter"
             android:textAppearance="@style/GuessWordText"
             android:width="300dp" />
-        <LinearLayout
+        <!--LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
@@ -245,7 +245,7 @@
                 android:text="@string/cancel"
                 android:textAppearance="@style/HelpText.Heading"
                 tools:ignore="ButtonStyle" />
-        </LinearLayout>
+        </LinearLayout -->
         <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -271,23 +271,22 @@
                 tools:ignore="ButtonStyle" />
         </LinearLayout>
         <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
 
             <aferrer.vectorRace.DrawingView
                 android:id="@+id/drawing"
-                android:layout_width="match_parent"
-                android:layout_height="300dp"
-                android:layout_marginBottom="3dp"
-                android:layout_marginLeft="5dp"
-                android:layout_marginRight="5dp"
-                android:layout_marginTop="3dp"
-                android:background="#FFFFFFFF" />
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent" />
 
             <!-- 9 buttons to drive the mCar -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="5dp"
                 android:orientation="vertical" >
 
                 <LinearLayout

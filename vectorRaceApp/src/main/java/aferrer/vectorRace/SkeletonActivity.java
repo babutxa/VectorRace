@@ -315,12 +315,9 @@ public class SkeletonActivity extends Activity
         setViewVisibility();
         mTurnTextView.setText("Turn " + mGameState.turnCounter);
 
-        //pintem el gameState
-        String playerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
-        String myParticipantId = mMatch.getParticipantId(playerId);
-
+        //pintem el GameState
         DrawingView mDrawView = (DrawingView)findViewById(R.id.drawing);
-        mDrawView.drawGameState(mGameState, myParticipantId);
+        mDrawView.updateGameState(mGameState);
     }
 
     // Helpful dialogs
@@ -436,17 +433,18 @@ public class SkeletonActivity extends Activity
         // init game state
         mGameState = new GameState();
         mGameState.mTrackId = mSelectedTrack;
+
         ArrayList<String> participantsIds = mMatch.getParticipantIds();
         for(int i = 0; i < participantsIds.size(); i++){
             mGameState.addCar(participantsIds.get(i));
         }
 
         String playerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
-        String myParticipantId = mMatch.getParticipantId(playerId);
+        mGameState.mCurrParticipantId = mMatch.getParticipantId(playerId);
         showSpinner();
 
         Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, match.getMatchId(),
-                mGameState.persist(), myParticipantId).setResultCallback(
+                mGameState.persist(), mGameState.mCurrParticipantId).setResultCallback(
                 new ResultCallback<TurnBasedMultiplayer.UpdateMatchResult>() {
                     @Override
                     public void onResult(TurnBasedMultiplayer.UpdateMatchResult result) {
@@ -537,6 +535,8 @@ public class SkeletonActivity extends Activity
         switch (turnStatus) {
             case TurnBasedMatch.MATCH_TURN_STATUS_MY_TURN:
                 mGameState = GameState.unpersist(mMatch.getData());
+                String playerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
+                mGameState.mCurrParticipantId = mMatch.getParticipantId(playerId);
                 setGameplayUI();
                 return;
             case TurnBasedMatch.MATCH_TURN_STATUS_THEIR_TURN:
@@ -709,15 +709,11 @@ public class SkeletonActivity extends Activity
         ImageButton currButton = (ImageButton)view;
         currButton.setImageDrawable(getResources().getDrawable(R.drawable.paint_pressed));
 
-        //un cotxe per jugador.
-        String playerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
-        String myParticipantId = mMatch.getParticipantId(playerId);
-
         // second check -> the current player has finished his turn
         if(currentClicked == mPreviousClicked) {
             ImageButton prevButton = (ImageButton)findViewById(mPreviousClicked);
             prevButton.setImageDrawable(getResources().getDrawable(R.drawable.paint));
-            mGameState.updateState(myParticipantId);
+            mGameState.updateState();
             mPreviousClicked = 0;
             turnDone();
             return;
@@ -731,37 +727,37 @@ public class SkeletonActivity extends Activity
 
         switch(currentClicked){
             case R.id.button1:
-                mGameState.updateFutureState(myParticipantId, -1, -1);
+                mGameState.updateFutureState(-1, -1);
                 break;
             case R.id.button2:
-                mGameState.updateFutureState(myParticipantId, 0, -1);
+                mGameState.updateFutureState(0, -1);
                 break;
             case R.id.button3:
-                mGameState.updateFutureState(myParticipantId, 1, -1);
+                mGameState.updateFutureState(1, -1);
                 break;
             case R.id.button4:
-                mGameState.updateFutureState(myParticipantId, -1, 0);
+                mGameState.updateFutureState(-1, 0);
                 break;
             case R.id.button5:
-                mGameState.updateFutureState(myParticipantId, 0, 0);
+                mGameState.updateFutureState(0, 0);
                 break;
             case R.id.button6:
-                mGameState.updateFutureState(myParticipantId, 1, 0);
+                mGameState.updateFutureState(1, 0);
                 break;
             case R.id.button7:
-                mGameState.updateFutureState(myParticipantId, -1, 1);
+                mGameState.updateFutureState(-1, 1);
                 break;
             case R.id.button8:
-                mGameState.updateFutureState(myParticipantId, 0, 1);
+                mGameState.updateFutureState(0, 1);
                 break;
             case R.id.button9:
-                mGameState.updateFutureState(myParticipantId, 1, 1);
+                mGameState.updateFutureState(1, 1);
                 break;
         }
 
         //turn finished
         DrawingView mDrawView = (DrawingView)findViewById(R.id.drawing);
-        mDrawView.drawGameState(mGameState, myParticipantId);
+        mDrawView.updateGameState(mGameState);
         mPreviousClicked = currentClicked;
     }
 }
