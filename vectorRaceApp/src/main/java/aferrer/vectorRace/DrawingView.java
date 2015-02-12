@@ -25,14 +25,10 @@ public class DrawingView extends ImageView {
     GameState mGameState;
 
     //scroll stuff
-    private float mCurrentX = 0;
-    private float mCurrentY = 0;
+    private float mPrevX = 0;
+    private float mPrevY = 0;
     private float mTotalX = 0;
     private float mTotalY = 0;
-    private float mDeltaX = 0;
-    private float mDeltaY = 0;
-    private int mPadding;
-    private final int DEFAULT_PADDING = 10;
 
 
     public DrawingView(Context context, AttributeSet attrs){
@@ -41,7 +37,6 @@ public class DrawingView extends ImageView {
     }
 
     private void setupDrawing(){
-        mPadding = DEFAULT_PADDING;
 
         setScaleType(ScaleType.MATRIX);
 
@@ -80,38 +75,27 @@ public class DrawingView extends ImageView {
         //detect userTouch
         switch(event.getAction()){
             case MotionEvent.ACTION_DOWN:
-                mCurrentX = event.getRawX();
-                mCurrentY = event.getRawY();
+                mPrevX = event.getRawX();
+                mPrevY = event.getRawY();
                 break;
+
             case MotionEvent.ACTION_MOVE:
                 float x = event.getRawX();
                 float y = event.getRawY();
 
                 // Update how much the touch moved
-                mDeltaX = x - mCurrentX;
-                mDeltaY = y - mCurrentY;
+                //TODO alba : limitar el rang de translacions possibles
+                mTotalX += x - mPrevX;
+                mTotalY += y - mPrevY;
 
-                mCurrentX = x;
-                mCurrentY = y;
+                mPrevX = x;
+                mPrevY = y;
 
                 invalidate();
                 break;
          }
         // Consume event
         return true;
-    }
-
-    // this function updates the values of mTotalX and mTotalY necessary for scrolling.
-    private void updateScroll(){
-        //float newTotalX = mTotalX + mDeltaX;
-        // Don't scroll off the left or right edges of the bitmap.
-        //if (mPadding > newTotalX && newTotalX > getMeasuredWidth() - canvasBitmap.getWidth() - mPadding)
-            mTotalX += mDeltaX;
-
-        //float newTotalY = mTotalY + mDeltaY;
-        // Don't scroll off the top or bottom edges of the bitmap.
-        //if (mPadding > newTotalY && newTotalY > getMeasuredHeight() - canvasBitmap.getHeight() - mPadding)
-            mTotalY += mDeltaY;
     }
 
     public void updateGameState(GameState gameState){
@@ -121,11 +105,8 @@ public class DrawingView extends ImageView {
 
     private void drawGameState(Canvas canvas){
         Log.d("*** DrawingView ", "drawGameState(): -------------------------------------");
-        //clear all
-        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
 
         //scroll
-        updateScroll();
         canvas.translate(mTotalX, mTotalY);
 
         //redraw state
