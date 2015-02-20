@@ -1,5 +1,8 @@
 package aferrer.vectorRace;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -17,22 +20,42 @@ public class GameState {
 
     private static final String TAG = "EBTurn";
 
-    public int turnCounter;
-    public String mTrackId;
+    private int mTurnCounter;
+    private String mTrackId;
     private ArrayList<Car> mCars;
 
     //not serialisable stuff
     public String mCurrParticipantId;
+    private Track mTrack;
 
     public GameState(){
-        turnCounter = 0;
+        mTurnCounter = 0;
         mTrackId = "";
         mCars = new ArrayList<Car>();
     }
 
+    public void setTrackId(String trackId){
+        mTrackId = trackId;
+    }
+
+    public String getTrackId(){
+        return mTrackId;
+    }
+
+    public void setTrackMask(Bitmap mask){
+        mTrack = new Track(mask);
+    }
+
+    public int getTurnCounter(){
+        return mTurnCounter;
+    }
+
+    public int worldToImage(int i){
+       return mTrack.worldToImage(i);
+    }
+
     public void addCar(String participantId){
-        Car newCar = new Car(participantId, getColor(mCars.size()), 10, 10);
-        //TODO alba: falta mTrackId. Quant el sapiguem, haurem de posar a cada cotxe la posicio inicial
+        Car newCar = new Car(participantId, getColor(mCars.size()), mTrack.getStartX(), mTrack.getStartY());
         mCars.add(newCar);
     }
 
@@ -59,25 +82,32 @@ public class GameState {
         for(int i = 0; i < mCars.size(); i++){
             if(mCars.get(i).mParticipantId.equals(mCurrParticipantId)){
                 mCars.get(i).addFuturePos(ax, ay);
+                //TODO alba: aqui haurem de gestionar si el cotxe ha sortit de la carretera
+                checkWillCrash(mCars.get(i));
             }
         }
+    }
+
+    public void checkWillCrash(Car car){
+        Track.TypeOfGround typeOfGround = mTrack.getTypeOfGround(car.getFutureX(), car.getFutureY());
+        Log.d("*** GameState ", "checkWillCrash(): ---------- pos = (" + car.getFutureX() + ", " + car.getFutureY() + ") -> " + typeOfGround.toString());
     }
 
     public void updateState(){
         Log.d("*** GameState ", "updateState(): -------------------------------------");
         for(int i = 0; i < mCars.size(); i++){
             if(mCars.get(i).mParticipantId.equals(mCurrParticipantId)){
-                //TODO alba: aqui haurem de gestionar si el cotxe ha sortit de la carretera
                 mCars.get(i).move();
             }
         }
+        mTurnCounter = mTurnCounter + 1;
     }
 
     // This is the byte array we will write out to the TBMP API.
     public byte[] persist() {
         JSONObject retVal = new JSONObject();
         try {
-            retVal.put("turnCounter", turnCounter);
+            retVal.put("turnCounter", mTurnCounter);
             retVal.put("trackId", mTrackId);
             //list of cars
             JSONArray jCars = new JSONArray();
@@ -113,10 +143,10 @@ public class GameState {
         try {
             JSONObject obj = new JSONObject(st);
             if (obj.has("turnCounter")) {
-                retVal.turnCounter = obj.getInt("turnCounter");
+                retVal.mTurnCounter = obj.getInt("turnCounter");
             }
             if(obj.has("trackId")){
-                retVal.mTrackId = obj.getString("trackId");
+                retVal.setTrackId(obj.getString("trackId"));
             }
             if(obj.has("cars")){
                 JSONArray jCars = obj.getJSONArray("cars");

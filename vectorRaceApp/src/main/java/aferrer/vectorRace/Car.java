@@ -52,63 +52,6 @@ public class Car {
             y.add(jy.optInt(i));
         }
     }
-
-    public Integer getFutureX(){return mFutureX;}
-    public Integer getFutureY(){return mFutureY;}
-
-    public void addFuturePos(int ax, int ay){
-        Log.d("*** car ", "addFuturePos(): -------------------------------------" + mParticipantId);
-        int size = x.size();
-        int vx = getVx() + ax;
-        int vy = getVy() + ay;
-        mFutureX = x.get(size - 1) + vx;
-        mFutureY = y.get(size - 1) + vy;
-        mFutureValid = true;
-    }
-
-    public void move(){
-        if(mFutureValid) {
-            x.add(mFutureX);
-            y.add(mFutureY);
-        }
-        else {
-            Log.d("*** Car ", "move(): the future pos is not valid.");
-        }
-    }
-
-    public void resetFuturePos(){
-        mFutureValid = false;
-    }
-
-    public Boolean hasFuturePos(){
-        return mFutureValid;
-    }
-
-    public int getNumOfMovements(){
-        return x.size();
-    }
-
-    public int getCurrPosIdx(){
-        return(x.size() - 1);
-    }
-
-    public int getVx(){
-        int size = x.size();
-        if(size > 2) {
-            return x.get(size - 1) - x.get(size - 2);
-        }
-        return 0;
-    }
-    public int getVy(){
-        int size = x.size();
-        if(size > 2) {
-            return y.get(size - 1) - y.get(size - 2);
-        }
-        return 0;
-    }
-
-
-
     public JSONObject toJSONObject() {
 
         JSONArray jx = new JSONArray();
@@ -130,5 +73,54 @@ public class Car {
             e.printStackTrace();
         }
         return jo;
+    }
+
+    public int getFutureX(){return mFutureX;}
+    public int getFutureY(){return mFutureY;}
+    public int getX(){return x.get(x.size() - 1);}
+    public int getY(){return y.get(y.size() - 1);}
+    public int getNumOfMovements(){
+        return x.size();
+    }
+    public int getCurrPosIdx(){
+        return(x.size() - 1);
+    }
+    public int getVx(){
+        int size = x.size();
+        if(size > 2) {
+            return x.get(size - 1) - x.get(size - 2);
+        }
+        return 0;
+    }
+    public int getVy(){
+        int size = x.size();
+        if(size > 2) {
+            return y.get(size - 1) - y.get(size - 2);
+        }
+        return 0;
+    }
+
+    public void addFuturePos(int ax, int ay){
+        Log.d("*** Car ", "addFuturePos(): -------------------------------------" + mParticipantId);
+        int size = x.size();
+        int vx = getVx() + ax;
+        int vy = getVy() + ay;
+        mFutureX = x.get(size - 1) + vx;
+        mFutureY = y.get(size - 1) + vy;
+        mFutureValid = true;
+    }
+    public Boolean hasFuturePos(){
+        return mFutureValid;
+    }
+
+    public void move(){
+        if(mFutureValid) {
+            x.add(mFutureX);
+            y.add(mFutureY);
+            mFutureValid = false;
+        }
+        else {
+            Log.d("*** Car ", "move(): the future pos is not valid.");
+        }
     }
 }

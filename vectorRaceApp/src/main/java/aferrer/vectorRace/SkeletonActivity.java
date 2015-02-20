@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -268,7 +270,6 @@ public class SkeletonActivity extends Activity
         String nextParticipantId = getNextParticipantId();
 
         // Create the next turn
-        mGameState.turnCounter += 1;
         showSpinner();
 
         Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mMatch.getMatchId(), mGameState.persist(), nextParticipantId)
@@ -313,7 +314,7 @@ public class SkeletonActivity extends Activity
     public void setGameplayUI() {
         isDoingTurn = true;
         setViewVisibility();
-        mTurnTextView.setText("Turn " + mGameState.turnCounter);
+        mTurnTextView.setText("Turn " + mGameState.getTurnCounter());
 
         //pintem el GameState
         DrawingView mDrawView = (DrawingView)findViewById(R.id.drawing);
@@ -421,6 +422,32 @@ public class SkeletonActivity extends Activity
         }
     }
 
+    private Bitmap getMaskBitmap(){
+        Bitmap bm = null;
+        switch(mGameState.getTrackId()){
+            case "track1":
+                bm = BitmapFactory.decodeResource(getResources(), R.drawable.track1);
+                break;
+            case "track2":
+                bm = BitmapFactory.decodeResource(getResources(), R.drawable.track);
+                break;
+            case "track3":
+                bm = BitmapFactory.decodeResource(getResources(), R.drawable.track3);
+                break;
+            case "track4":
+                bm = BitmapFactory.decodeResource(getResources(), R.drawable.track4);
+                break;
+            case "track5":
+                bm = BitmapFactory.decodeResource(getResources(), R.drawable.track5);
+                break;
+            case "track6":
+                bm = BitmapFactory.decodeResource(getResources(), R.drawable.track6);
+                break;
+        }
+        return bm;
+    }
+
+
     // startMatch() happens in response to the createTurnBasedMatch()
     // above. This is only called on success, so we should have a
     // valid match object. We're taking this opportunity to setup the
@@ -432,7 +459,8 @@ public class SkeletonActivity extends Activity
 
         // init game state
         mGameState = new GameState();
-        mGameState.mTrackId = mSelectedTrack;
+        mGameState.setTrackId(mSelectedTrack);
+        mGameState.setTrackMask(getMaskBitmap());
 
         ArrayList<String> participantsIds = mMatch.getParticipantIds();
         for(int i = 0; i < participantsIds.size(); i++){
@@ -537,6 +565,7 @@ public class SkeletonActivity extends Activity
                 mGameState = GameState.unpersist(mMatch.getData());
                 String playerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
                 mGameState.mCurrParticipantId = mMatch.getParticipantId(playerId);
+                mGameState.setTrackMask(getMaskBitmap());
                 setGameplayUI();
                 return;
             case TurnBasedMatch.MATCH_TURN_STATUS_THEIR_TURN:

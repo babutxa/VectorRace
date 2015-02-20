@@ -1,6 +1,8 @@
 package aferrer.vectorRace;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.util.Log;
 
@@ -9,48 +11,74 @@ import android.util.Log;
  */
 public class Track {
 
-    //public Bitmap mask;
-    public int start_pos_x;
-    public int start_pos_y;
-    public int pixelsPerSquare;
+    public enum TypeOfGround {
+        START_POINT, ROAD, CURB, GRAVEL, WALL,
+        CHECKPOINT_1, CHECKPOINT_2, CHECKPOINT_3, FINISH,
+        UNKNOWN
+    }
+
+    //world reference
+    private Bitmap mMask;
+    private int mStartX;
+    private int mStartY;
+
+    //image reference
+    private int mPixelsPerGridSquare;
 
     //constructor
-    public Track(){
+    public Track(Bitmap mask){
 
-        pixelsPerSquare = 12;
-        //mask = track_mask;
-        analyzeMask();
+        // TODO alba: aixo ha d'estar en la definició del track "trackId"
+        mMask = mask;
+        mPixelsPerGridSquare = 25;
+        mStartX = 10;
+        mStartY = 10;
     }
 
-    public void analyzeMask(){
-        /*
-        Log.w("[MyFirstApp]", "in analyzeMask = (" + mask.getWidth() + "," + mask.getHeight() + ")");
-        start_pos_x = 10;
-        start_pos_y = 10;
+    public int getStartX(){return mStartX;}
+    public int getStartY(){return mStartY;}
 
-        int grid_width = mask.getWidth() / pixelsPerSquare;
-        int grid_height = mask.getHeight() / pixelsPerSquare;
+    public int worldToImage(int i){
+        return i * mPixelsPerGridSquare;
+    }
 
-        for(int i = 0; i < grid_width; i++){
-            for(int j = 0; j < grid_height; j++){
-                int color = mask.getPixel(i * pixelsPerSquare, j * pixelsPerSquare);
-                switch(color){
-                    case Color.CYAN :   //startPoint
-                        start_pos_x = i;
-                        start_pos_y = j;
-                        break;
-                    case Color.WHITE :  //road
-                    case Color.GRAY :   //curb
-                    case Color.YELLOW : //gravel
-                    case Color.BLUE :   //wall
-                    case Color.GREEN :  //checkpoint1
-                    case Color.RED :    //checkpoint2
-                    case Color.MAGENTA ://checkpoint3
-                    case Color.BLACK :  //finish
-                        break;
-                }
-            }
+    public TypeOfGround getTypeOfGround(int posX, int posY){
+        int pixelValue = mMask.getPixel(posX, posY);
+        return colorToTypeOfGround( pixelValue );
+    }
+
+    private TypeOfGround colorToTypeOfGround(int color){
+        // DKGRAY(0xff444444)
+        // LTGRAY(0xffcccccc)
+        // TRANSPARENT(0x00000000)
+        switch(color){
+            case Color.CYAN :   //(0xff00ffff)
+                return TypeOfGround.START_POINT;
+            case Color.WHITE :  //(0xffffffff)
+                return TypeOfGround.ROAD;
+            case Color.GRAY :   //(0xff888888)
+                return TypeOfGround.CURB;
+            case Color.YELLOW : //(0xffffff00)
+                return TypeOfGround.GRAVEL;
+            case Color.BLUE :   //(0xff0000ff)
+                return TypeOfGround.WALL;
+            case Color.GREEN :  //(0xff00ff00)
+                return TypeOfGround.CHECKPOINT_1;
+            case Color.RED :    //(0xffff0000)
+                return TypeOfGround.CHECKPOINT_2;
+            case Color.MAGENTA ://(0xffff00ff)
+                return TypeOfGround.CHECKPOINT_3;
+            case Color.BLACK :  //(0xff000000)
+                return TypeOfGround.FINISH;
         }
-        */
+        Log.d("*** Track ", "colorToTypeOfGround(): argb = (" +
+                Color.alpha(color) + ", " + Color.red(color) + ", " + Color.green(color) + ", " + Color.blue(color) + ")");
+        return TypeOfGround.UNKNOWN;
     }
 }
+
+
+
+
+
+
