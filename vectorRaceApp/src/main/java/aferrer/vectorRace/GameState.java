@@ -1,8 +1,6 @@
 package aferrer.vectorRace;
 
-import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -82,15 +80,60 @@ public class GameState {
         for(int i = 0; i < mCars.size(); i++){
             if(mCars.get(i).mParticipantId.equals(mCurrParticipantId)){
                 mCars.get(i).addFuturePos(ax, ay);
-                //TODO alba: aqui haurem de gestionar si el cotxe ha sortit de la carretera
-                checkWillCrash(mCars.get(i));
             }
         }
     }
 
-    public void checkWillCrash(Car car){
-        Track.TypeOfGround typeOfGround = mTrack.getTypeOfGround(car.getFutureX(), car.getFutureY());
-        Log.d("*** GameState ", "checkWillCrash(): ---------- pos = (" + car.getFutureX() + ", " + car.getFutureY() + ") -> " + typeOfGround.toString());
+    public Boolean isValidPos(int posX, int posY){
+        Track.TypeOfGround typeOfGround = mTrack.getTypeOfGround(posX, posY);
+        if(typeOfGround == Track.TypeOfGround.OUT_OF_ROAD)
+            return false;
+        return true;
+    }
+
+
+    public Boolean checkIfCanContinue(){
+        Boolean canContinue = false;
+
+        for(int i = 0; i < mCars.size(); i++){
+            if(mCars.get(i).mParticipantId.equals(mCurrParticipantId)){
+                Car car = mCars.get(i);
+
+                //current mCar pos
+                int currIdx = car.getCurrPosIdx();
+                int currX = car.getX();
+                int currY = car.getY();
+
+
+                int nextx = car.x.get(currIdx) + car.getVx();
+                int nexty = car.y.get(currIdx) + car.getVy();
+
+                canContinue = canContinue | isValidPos((nextx - 1), (nexty - 1));
+                canContinue = canContinue | isValidPos((nextx - 1), (nexty));
+                canContinue = canContinue | isValidPos((nextx - 1), (nexty + 1));
+
+                canContinue = canContinue | isValidPos((nextx), (nexty - 1));
+                canContinue = canContinue | isValidPos((nextx), (nexty));
+                canContinue = canContinue | isValidPos((nextx), (nexty + 1));
+
+                canContinue = canContinue | isValidPos((nextx + 1), (nexty - 1));
+                canContinue = canContinue | isValidPos((nextx + 1), (nexty));
+                canContinue = canContinue | isValidPos((nextx + 1), (nexty + 1));
+
+                Log.d("*** GameState ", "checkIfCanContinue() carId = " + car.mParticipantId + " --> " + canContinue.toString());
+            }
+        }
+        return canContinue;
+    }
+
+    public void replaceOnRoad(){
+        for(int i = 0; i < mCars.size(); i++) {
+            if (mCars.get(i).mParticipantId.equals(mCurrParticipantId)) {
+                Car car = mCars.get(i);
+                //TODO alba: posar el cotxe a dins de la carretera amb velositat zero
+                car.forceStop();
+            }
+        }
     }
 
     public void updateState(){

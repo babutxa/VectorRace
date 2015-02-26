@@ -186,18 +186,25 @@ public class DrawingView extends ImageView {
 
             //the current car shows the future options
             if(car.mParticipantId.equals(mGameState.mCurrParticipantId)) {
-                canvas.drawCircle(mGameState.worldToImage(nextx - 1), mGameState.worldToImage(nexty - 1), 5, paint);
-                canvas.drawCircle(mGameState.worldToImage(nextx - 1), mGameState.worldToImage(nexty), 5, paint);
-                canvas.drawCircle(mGameState.worldToImage(nextx - 1), mGameState.worldToImage(nexty + 1), 5, paint);
+                drawOptionPos(canvas, (nextx - 1), (nexty - 1));
+                drawOptionPos(canvas, (nextx - 1), (nexty));
+                drawOptionPos(canvas, (nextx - 1), (nexty + 1));
 
-                canvas.drawCircle(mGameState.worldToImage(nextx), mGameState.worldToImage(nexty - 1), 5, paint);
-                canvas.drawCircle(mGameState.worldToImage(nextx), mGameState.worldToImage(nexty), 5, paint);
-                canvas.drawCircle(mGameState.worldToImage(nextx), mGameState.worldToImage(nexty + 1), 5, paint);
+                drawOptionPos(canvas, (nextx), (nexty - 1));
+                drawOptionPos(canvas, (nextx), (nexty));
+                drawOptionPos(canvas, (nextx), (nexty + 1));
 
-                canvas.drawCircle(mGameState.worldToImage(nextx + 1), mGameState.worldToImage(nexty - 1), 5, paint);
-                canvas.drawCircle(mGameState.worldToImage(nextx + 1), mGameState.worldToImage(nexty), 5, paint);
-                canvas.drawCircle(mGameState.worldToImage(nextx + 1), mGameState.worldToImage(nexty + 1), 5, paint);
+                drawOptionPos(canvas, (nextx + 1), (nexty - 1));
+                drawOptionPos(canvas, (nextx + 1), (nexty));
+                drawOptionPos(canvas, (nextx + 1), (nexty + 1));
             }
         }
+    }
+
+    private void drawOptionPos(Canvas canvas, int x, int y){
+        if(mGameState.isValidPos(x, y))
+            canvas.drawCircle(mGameState.worldToImage(x), mGameState.worldToImage(y), 5, paint);
+        else
+            canvas.drawText("X", mGameState.worldToImage(x) - 4, mGameState.worldToImage(y) + 4, paint);
     }
 }

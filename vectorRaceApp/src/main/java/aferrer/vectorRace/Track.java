@@ -12,7 +12,7 @@ import android.util.Log;
 public class Track {
 
     public enum TypeOfGround {
-        START_POINT, ROAD, CURB, GRAVEL, WALL,
+        START_POINT, ROAD, OUT_OF_ROAD, CURB, GRAVEL, WALL,
         CHECKPOINT_1, CHECKPOINT_2, CHECKPOINT_3, FINISH,
         UNKNOWN
     }
@@ -43,7 +43,7 @@ public class Track {
     }
 
     public TypeOfGround getTypeOfGround(int posX, int posY){
-        int pixelValue = mMask.getPixel(posX, posY);
+        int pixelValue = mMask.getPixel(posX * mPixelsPerGridSquare, posY * mPixelsPerGridSquare);
         return colorToTypeOfGround( pixelValue );
     }
 
@@ -51,12 +51,18 @@ public class Track {
         // DKGRAY(0xff444444)
         // LTGRAY(0xffcccccc)
         // TRANSPARENT(0x00000000)
+
+        //Log.d("*** Track ", "colorToTypeOfGround(): argb = " + color + " - (" +
+       //         Color.alpha(color) + ", " + Color.red(color) + ", " + Color.green(color) + ", " + Color.blue(color) + ")");
+
         switch(color){
+            case -2004383865 :   //(0xff888888) //TODO alba: fer un editor de pantalles
+                return TypeOfGround.ROAD;
+            case Color.TRANSPARENT :
+                return TypeOfGround.OUT_OF_ROAD;
             case Color.CYAN :   //(0xff00ffff)
                 return TypeOfGround.START_POINT;
             case Color.WHITE :  //(0xffffffff)
-                return TypeOfGround.ROAD;
-            case Color.GRAY :   //(0xff888888)
                 return TypeOfGround.CURB;
             case Color.YELLOW : //(0xffffff00)
                 return TypeOfGround.GRAVEL;
@@ -70,9 +76,8 @@ public class Track {
                 return TypeOfGround.CHECKPOINT_3;
             case Color.BLACK :  //(0xff000000)
                 return TypeOfGround.FINISH;
+
         }
-        Log.d("*** Track ", "colorToTypeOfGround(): argb = (" +
-                Color.alpha(color) + ", " + Color.red(color) + ", " + Color.green(color) + ", " + Color.blue(color) + ")");
         return TypeOfGround.UNKNOWN;
     }
 }

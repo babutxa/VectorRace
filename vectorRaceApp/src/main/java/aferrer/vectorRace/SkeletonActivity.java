@@ -267,11 +267,8 @@ public class SkeletonActivity extends Activity
     // Upload your new gamestate, then take a turn, and pass it on to the next player.
     public void turnDone() {
         showSpinner();
+
         String nextParticipantId = getNextParticipantId();
-
-        // Create the next turn
-        showSpinner();
-
         Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mMatch.getMatchId(), mGameState.persist(), nextParticipantId)
                 .setResultCallback(new ResultCallback<TurnBasedMultiplayer.UpdateMatchResult>() {
                     @Override
@@ -346,6 +343,30 @@ public class SkeletonActivity extends Activity
 
         mAlertDialog = alertDialogBuilder.create(); // create alert dialog
         mAlertDialog.show();                        // show it
+    }
+
+    // Ask for continue playing
+    public void askForContinuePlaying() {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setMessage("You crashed. Do you want to continue??");
+        alertDialogBuilder
+                .setCancelable(false)
+                .setPositiveButton("Sure!",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                                mGameState.replaceOnRoad();
+                                DrawingView mDrawView = (DrawingView)findViewById(R.id.drawing);
+                                mDrawView.updateGameState(mGameState);
+                            }
+                        })
+                .setNegativeButton("No.",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int id) {
+                            }
+                        });
+        alertDialogBuilder.show();
     }
 
     // Rematch dialog
@@ -567,6 +588,12 @@ public class SkeletonActivity extends Activity
                 mGameState.mCurrParticipantId = mMatch.getParticipantId(playerId);
                 mGameState.setTrackMask(getMaskBitmap());
                 setGameplayUI();
+
+                //mirem si ha xocat
+                if(!mGameState.checkIfCanContinue()){
+                    askForContinuePlaying();
+                }
+
                 return;
             case TurnBasedMatch.MATCH_TURN_STATUS_THEIR_TURN:
                 // Should return results.
@@ -743,6 +770,7 @@ public class SkeletonActivity extends Activity
             ImageButton prevButton = (ImageButton)findViewById(mPreviousClicked);
             prevButton.setImageDrawable(getResources().getDrawable(R.drawable.paint));
             mGameState.updateState();
+
             mPreviousClicked = 0;
             turnDone();
             return;

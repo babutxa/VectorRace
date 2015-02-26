@@ -82,7 +82,7 @@ public class Car {
     public int getNumOfMovements(){
         return x.size();
     }
-    public int getCurrPosIdx(){
+    private int getCurrPosIdx(){
         return(x.size() - 1);
     }
     public int getVx(){
@@ -122,5 +122,12 @@ public class Car {
         else {
             Log.d("*** Car ", "move(): the future pos is not valid.");
         }
+    }
+
+    public void forceStop(){
+        mFutureValid = false;
+        //repeat last point to set vx and vy to zero
+        x.add(getX());
+        y.add(getY());
     }
 }
